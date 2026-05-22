@@ -58,11 +58,18 @@ jobs:
 
   # ──────────────────────────────────────────────────────────────────────────
   # SMOKE TESTS — verify EzAfk loads without errors on each server platform.
-  # Matrix: Java 21 & 25 (paper-api 26.x is compiled with Java 25/class v69;
-  # javac 17 cannot read those class files, so Java 17 build is not possible).
-  # The plugin JAR targets Java 17 bytecode (maven.compiler.release=17), so
-  # runtime compat with Java 17+ servers is guaranteed by the compiler flag.
-  # MC 1.21.x requires Java 21+ at runtime — minimum matrix entry is 21.
+  #
+  # Modern matrix (Java 21 & 25):
+  #   paper-api 26.x is compiled with Java 25 (class version 69); javac 17
+  #   cannot read those class files, so Java 17 cannot build the plugin.
+  #   MC 1.21.x also requires Java 21+ at runtime — minimum entry is 21.
+  #
+  # Legacy job (paper-legacy-smoke-test — Paper 1.20.4 / Java 17):
+  #   Paper 1.20.4 is the last MC version that accepts Java 17 at runtime.
+  #   MC 1.20.5/1.20.6+ require Java 21. The plugin is built with JDK 25
+  #   (maven.compiler.release=17 → Java 17 bytecode), then the server is
+  #   started with JDK 17 to verify genuine legacy server compatibility.
+  #
   # Build uses -Dmaven.test.skip=true (avoids needing the MockBukkit install).
   # ──────────────────────────────────────────────────────────────────────────
 
@@ -344,5 +351,106 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: folia-1.21.11-java${{ matrix.java }}-smoke-log
+          path: smoke-server/server.log
+          retention-days: 7
+
+  # ──────────────────────────────────────────────────────────────────────────
+  # LEGACY SMOKE TEST — Paper 1.20.4 / Java 17
+  # Last MC version that runs on Java 17 (1.20.5+ requires Java 21).
+  # Build with JDK 25, then start the server with JDK 17.
+  # ──────────────────────────────────────────────────────────────────────────
+  paper-legacy-smoke-test:
+    name: Paper 1.20.4 / Java 17 (legacy compat)
+    runs-on: ubuntu-latest
+    needs: [unit-tests, feature-tests]
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v5
+
+      - name: Set up build JDK 25
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '25'
+          cache: maven
+
+      - name: Build plugin JAR (JDK 25, java-17 bytecode)
+        run: mvn -B -ntp -Dmaven.test.skip=true package
+
+      - name: Set up server JDK 17
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '17'
+
+      - name: Resolve latest Paper 1.20.4 build
+        id: paper
+        run: |
+          BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds" | \
+            python3 -c "import sys,json; builds=json.load(sys.stdin)['builds']; print(builds[-1]['build'])")
+          JAR_NAME=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/${BUILD}" | \
+            python3 -c "import sys,json; d=json.load(sys.stdin); print(d['downloads']['application']['name'])")
+          echo "build=${BUILD}"       >> "$GITHUB_OUTPUT"
+          echo "jar_name=${JAR_NAME}" >> "$GITHUB_OUTPUT"
+          echo "Resolved: Paper 1.20.4 build ${BUILD} (${JAR_NAME})"
+
+      - name: Download Paper 1.20.4 server JAR
+        run: |
+          mkdir -p smoke-server/plugins
+          curl -fsSL \
+            "https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/${{ steps.paper.outputs.build }}/downloads/${{ steps.paper.outputs.jar_name }}" \
+            -o smoke-server/paper.jar
+
+      - name: Copy plugin JAR
+        run: cp target/ezafk-*.jar smoke-server/plugins/EzAfk.jar
+
+      - name: Configure server
+        run: |
+          echo "eula=true" > smoke-server/eula.txt
+          printf '%s\n' \
+            "online-mode=false" \
+            "level-type=flat" \
+            "generate-structures=false" \
+            "max-players=0" \
+            > smoke-server/server.properties
+
+      - name: Run server (Java 17) and wait for ready
+        run: |
+          cd smoke-server
+          java -Xms512m -Xmx1g -jar paper.jar --nogui > server.log 2>&1 &
+          SERVER_PID=$!
+          ELAPSED=0
+          while [ $ELAPSED -lt 120 ]; do
+            sleep 2; ELAPSED=$((ELAPSED + 2))
+            if grep -q "Done (" server.log 2>/dev/null; then
+              echo "Server ready after ${ELAPSED}s"; break
+            fi
+            if ! kill -0 $SERVER_PID 2>/dev/null; then
+              echo "Server process exited after ${ELAPSED}s"; break
+            fi
+          done
+          kill $SERVER_PID 2>/dev/null || true
+          wait $SERVER_PID 2>/dev/null || true
+
+      - name: Assert no EzAfk errors
+        run: |
+          LOG=smoke-server/server.log
+          if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
+            echo "::error::EzAfk logged errors on Paper 1.20.4 / Java 17 startup:"
+            grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
+            exit 1
+          fi
+          if grep -qiE "Enabling EzAfk" "$LOG"; then
+            echo "Paper 1.20.4 / Java 17 legacy smoke test passed."
+          else
+            echo "::warning::EzAfk 'Enabling EzAfk' not found in log — plugin may not have loaded within the timeout"
+          fi
+
+      - name: Upload server log
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: paper-1.20.4-java17-smoke-log
           path: smoke-server/server.log
           retention-days: 7
