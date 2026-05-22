@@ -11,8 +11,8 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <adventure.scope>provided</adventure.scope>
-        <maven.compiler.release>25</maven.compiler.release>
-        <paper.version>26.1.2.build.7-alpha</paper.version>
+        <maven.compiler.release>21</maven.compiler.release>
+        <paper.version>26.1.2.build.57-stable</paper.version>
         <bstats.version>3.1.0</bstats.version>
         <worldguard.version>7.0.13</worldguard.version>
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
