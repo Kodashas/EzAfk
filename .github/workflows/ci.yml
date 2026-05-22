@@ -154,9 +154,9 @@ jobs:
       - name: Assert no EzAfk errors
         run: |
           LOG=smoke-server/server.log
-          if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
+          if grep -qE "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"; then
             echo "::error::EzAfk logged errors on Spigot 1.21.4 / Java 21 startup:"
-            grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
+            grep -E "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
@@ -244,9 +244,9 @@ jobs:
       - name: Assert no EzAfk errors
         run: |
           LOG=smoke-server/server.log
-          if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
+          if grep -qE "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"; then
             echo "::error::EzAfk logged errors on Paper 1.21.11 / Java 25 startup:"
-            grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
+            grep -E "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
@@ -334,9 +334,9 @@ jobs:
       - name: Assert no EzAfk errors
         run: |
           LOG=smoke-server/server.log
-          if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
+          if grep -qE "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"; then
             echo "::error::EzAfk logged errors on Folia 1.21.11 / Java 25 startup:"
-            grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
+            grep -E "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
@@ -373,6 +373,31 @@ jobs:
           distribution: temurin
           java-version: '25'
           cache: maven
+
+      - name: Rebuild EzFramework libs (Java 11 target)
+        # JitPack builds these with Java 21 (class file version 65).
+        # Java 17 servers only accept up to class file version 61, so we
+        # rebuild both from source targeting Java 11 and install locally so
+        # the shade plugin picks up the compatible bytecode.
+        run: |
+          patch_java() {
+            sed -i \
+              -e 's|<java.version>21</java.version>|<java.version>11</java.version>|' \
+              -e 's|<maven.compiler.release>21</maven.compiler.release>|<maven.compiler.release>11</maven.compiler.release>|' \
+              -e 's|<maven.compiler.source>21</maven.compiler.source>|<maven.compiler.source>11</maven.compiler.source>|' \
+              -e 's|<maven.compiler.target>21</maven.compiler.target>|<maven.compiler.target>11</maven.compiler.target>|' \
+              pom.xml
+          }
+          # 1. JavaQueryBuilder (transitive dep of Jaloquent, also shaded)
+          git clone --depth=1 https://github.com/EzFramework/JavaQueryBuilder.git /tmp/JavaQueryBuilder
+          cd /tmp/JavaQueryBuilder
+          patch_java
+          mvn -q clean install -Dmaven.test.skip=true
+          # 2. Jaloquent (direct dep, also shaded)
+          git clone --depth=1 https://github.com/EzFramework/Jaloquent.git /tmp/Jaloquent
+          cd /tmp/Jaloquent
+          patch_java
+          mvn -q clean install -Dmaven.test.skip=true
 
       - name: Build plugin JAR (JDK 25, java-17 bytecode)
         run: mvn -B -ntp -Dmaven.test.skip=true package
@@ -435,9 +460,9 @@ jobs:
       - name: Assert no EzAfk errors
         run: |
           LOG=smoke-server/server.log
-          if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
+          if grep -qE "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"; then
             echo "::error::EzAfk logged errors on Paper 1.20.4 / Java 17 startup:"
-            grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
+            grep -E "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
