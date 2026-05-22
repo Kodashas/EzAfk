@@ -35,19 +35,27 @@ afk:
     enabled: true
   hide-screen:
     # Apply a blindness effect to AFK players to hide their screen until they return.
+    # Requires MC 1.13+ (PotionEffect icon parameter). Always available on the minimum supported version (1.19).
     enabled: false
   animation:
+    # Spawns particles and plays sounds when a player goes/returns from AFK.
+    # Cherry Leaves particles are only available on MC 1.20+; they are silently skipped on 1.19.x.
     enabled: true
   # Prevent players from bypassing AFK
   anti:
     # Toggle the infinite water flow protection
     infinite-waterflow: false
     infinite-vehicle: false
+    # Detects upward push from soul-sand bubble columns. Requires MC 1.13+ (BUBBLE_COLUMN material).
+    # Always available on the minimum supported version (1.19).
     bubble-column: false
     # When true, bypass attempts silently mark the player as AFK instead of alerting them.
     flag-only: false
   sound:
-    enabled: true # Enable playing a sound when going AFK (requires Simple Voice Chat integration)
+    # Plays an MP3 file when a player goes AFK via Simple Voice Chat.
+    # Only active when the Simple Voice Chat plugin is present and integration.voicechat is true/auto.
+    # Disabled by default; enable only after installing Simple Voice Chat.
+    enabled: false
     # Path to the MP3 file to play (relative to plugin folder). Must be a valid MP3 file, 48kHz recommended.
     file: "mp3/ezafk-sound.mp3"
   # Change the in-game display name (e.g., chat) while the player is AFK.
@@ -69,7 +77,10 @@ unafk:
   animation:
     enabled: true
   sound:
-    enabled: true
+    # Plays an MP3 file when a player returns from AFK via Simple Voice Chat.
+    # Only active when the Simple Voice Chat plugin is present and integration.voicechat is true/auto.
+    # Disabled by default; enable only after installing Simple Voice Chat.
+    enabled: false
     # Path to the MP3 file to play when returning from AFK (relative to plugin folder)
     file: "mp3/ezafk-sound.mp3"
 economy:

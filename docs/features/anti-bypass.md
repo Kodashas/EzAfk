@@ -50,6 +50,8 @@ afk:
 ## Notes
 
 - Anti-bypass rules are independent. Enable only the ones relevant to your server's gameplay.
+- `bubble-column` requires MC 1.13+ (`BUBBLE_COLUMN` material). This is always satisfied on the
+  minimum supported version (1.19).
 - WorldGuard region flags can restrict AFK behaviour on a per-region basis. See
   [WorldGuard Integration](../integrations/WorldGuardIntegration).
 - Players with the `ezafk.bypass` permission are not subject to anti-bypass checks when
