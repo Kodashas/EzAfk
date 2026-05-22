@@ -2,7 +2,8 @@ package com.gyvex.ezafk.state;
 
 import com.gyvex.ezafk.EzAfk;
 import com.gyvex.ezafk.bootstrap.Registry;
-import com.gyvex.ezafk.compatibility.CompatibilityUtil;
+import com.gyvex.ezafk.compatibility.player.PlayerDisplayCompat;
+import com.gyvex.ezafk.compatibility.sound.SoundCompat;
 import com.gyvex.ezafk.integration.TabIntegration;
 import com.gyvex.ezafk.manager.AfkTimeManager;
 import com.gyvex.ezafk.manager.EconomyManager;
@@ -129,7 +130,7 @@ public class AfkState {
                     subtitle = "";
                 }
 
-                CompatibilityUtil.sendTitle(player, title, subtitle, 10, 70, 20);
+                PlayerDisplayCompat.sendTitle(player, title, subtitle, 10, 70, 20);
             }
 
             if (Registry.get().getPlugin().getConfig().getBoolean("afk.animation.enabled")) {
@@ -236,14 +237,14 @@ public class AfkState {
                 subtitle = "";
             }
 
-            CompatibilityUtil.sendTitle(player, title, subtitle, 10, 70, 20);
+            PlayerDisplayCompat.sendTitle(player, title, subtitle, 10, 70, 20);
         }
 
         // Play a return-from-AFK sound when applicable. If Simple Voice Chat integration is available
         // it will be handled by the integration listener; otherwise play a default Bukkit-compatible sound.
         if (mode == AfkActivationMode.STANDARD && !IntegrationManager.hasIntegration("voicechat")
                 && Registry.get().getConfigManager().isUnafkSoundEnabled()) {
-            CompatibilityUtil.playSound(player, 1.0f, 1.0f, "ENTITY_EXPERIENCE_ORB_PICKUP", "ORB_PICKUP", "ENTITY_ORB_PICKUP");
+            SoundCompat.playSound(player, 1.0f, 1.0f, "ENTITY_EXPERIENCE_ORB_PICKUP", "ORB_PICKUP", "ENTITY_ORB_PICKUP");
         }
     }
 

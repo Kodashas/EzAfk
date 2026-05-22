@@ -32,9 +32,10 @@ public class PlayerActivityListener implements Listener {
     public void onInventoryClick(InventoryClickEvent event) {
         HumanEntity human = event.getWhoClicked();
 
-        if (!(human instanceof Player player)) {
+        if (!(human instanceof Player)) {
             return;
         }
+        Player player = (Player) human;
 
         if (event.getClickedInventory() == null) {
             return;

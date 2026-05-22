@@ -10,6 +10,7 @@ import java.util.Map;
 import java.util.NavigableSet;
 import java.util.Set;
 import java.util.UUID;
+import java.util.stream.Collectors;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertIterableEquals;
@@ -78,11 +79,11 @@ class AfkTimeManagerTest {
     }
 
     private List<UUID> extractPlayerOrder(List<Map.Entry<UUID, Long>> entries) {
-        return entries.stream().map(Map.Entry::getKey).toList();
+        return entries.stream().map(Map.Entry::getKey).collect(Collectors.toList());
     }
 
     private List<Long> extractTotals(List<Map.Entry<UUID, Long>> entries) {
-        return entries.stream().map(Map.Entry::getValue).toList();
+        return entries.stream().map(Map.Entry::getValue).collect(Collectors.toList());
     }
 
     @SuppressWarnings("unchecked")

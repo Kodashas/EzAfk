@@ -429,6 +429,13 @@ public final class AfkTimeManager {
         return true;
     }
 
-    private record LeaderboardEntry(UUID playerId, long totalSeconds) {
+    private static final class LeaderboardEntry {
+        private final UUID playerId;
+        private final long totalSeconds;
+
+        LeaderboardEntry(UUID playerId, long totalSeconds) {
+            this.playerId = playerId;
+            this.totalSeconds = totalSeconds;
+        }
     }
 }

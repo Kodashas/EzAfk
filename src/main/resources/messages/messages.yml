@@ -86,6 +86,14 @@ kick:
     title:
       title: "&cAFK Warning"
       subtitle: "&eKicked in &c%seconds% &esec!"
+    action_bar: "&eKicked in &c%seconds%s &efor being AFK!"
+    boss_bar: "&cAFK Warning &e\u2014 kicked in &c%seconds%s"
+    # Message used when EzCountdown handles the countdown display (TITLE, ACTION_BAR,
+    # BOSS_BAR, SCOREBOARD, DIALOG).  Supports EzCountdown placeholders:
+    #   {seconds}   – live remaining seconds (updated every tick)
+    #   {minutes}   – remaining minutes
+    #   {formatted} – formatted duration (e.g. "1m 30s")
+    countdown: "&cAFK kick in &e{seconds}s"
 
 
 afkzone:

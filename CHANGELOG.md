@@ -12,11 +12,21 @@ Release tags use the `v` prefix (e.g. `v3.0.0`).
 
 ### Added
 
+- **EzCountdown integration** — EzAfk now optionally integrates with the
+  [EzCountdown](https://github.com/ez-plugins/EzCountdown) plugin. Detected
+  automatically when present (`integration.ezcountdown: auto`).
+- **Configurable kick-warning display types** — `kick.warnings.displays` accepts
+  a list of display types: `CHAT`, `TITLE`, `ACTION_BAR`, `BOSS_BAR`. Multiple
+  types can be active at once (e.g. `[ACTION_BAR, BOSS_BAR]`). When the list is
+  empty the legacy `kick.warnings.mode` value is used for backward compatibility.
+- New message keys `kick.warning.action_bar` and `kick.warning.boss_bar` in
+  `messages.yml` for the new display types.
+
 ### Changed
 
-### Fixed
-
-### Removed
+- `CompatibilityUtil` now handles `sendActionBar`, `showBossBarWarning`, and
+  `removeWarningBossBar` via reflection — safe on servers without the BossBar
+  API (pre-1.9) or without the action-bar method available.
 
 ---
 

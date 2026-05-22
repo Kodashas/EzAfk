@@ -120,8 +120,8 @@ public final class AfkZoneRewardManager {
             if (IntegrationManager.hasIntegration("economy")) {
                 try {
                     Integration integration = (Integration) IntegrationManager.getIntegration("economy");
-                    if (integration instanceof EconomyIntegration ei) {
-                        econ = ei.getEconomy();
+                    if (integration instanceof EconomyIntegration) {
+                        econ = ((EconomyIntegration) integration).getEconomy();
                     }
                 } catch (Throwable ignored) {}
             }

@@ -137,10 +137,11 @@ public class EzAfkCommand implements CommandExecutor {
     }
 
     private void handleGui(CommandSender sender) {
-        if (!(sender instanceof Player player)) {
+        if (!(sender instanceof Player)) {
             MessageManager.sendMessage(sender, "command.gui.player-only", "&cOnly players can use this command.");
             return;
         }
+        Player player = (Player) sender;
         if (!player.hasPermission("ezafk.gui") && !player.isOp()) {
             MessageManager.sendMessage(sender, "command.gui.no-permission", "&cYou don't have permission to use this command.");
             return;

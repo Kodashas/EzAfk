@@ -10,6 +10,7 @@ import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
 import org.bukkit.block.BlockFace;
+import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Levelled;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
@@ -159,9 +160,11 @@ public class MoveListener implements Listener {
             return false;
         }
 
-        if (!(block.getBlockData() instanceof Levelled levelled)) {
+        BlockData blockData = block.getBlockData();
+        if (!(blockData instanceof Levelled)) {
             return false;
         }
+        Levelled levelled = (Levelled) blockData;
 
         int level = levelled.getLevel();
 
@@ -182,7 +185,8 @@ public class MoveListener implements Listener {
                 return true;
             }
 
-            if (relative.getType() == Material.WATER && relative.getBlockData() instanceof Levelled adjacentLevelled) {
+            if (relative.getType() == Material.WATER && relative.getBlockData() instanceof Levelled) {
+                Levelled adjacentLevelled = (Levelled) relative.getBlockData();
                 if (adjacentLevelled.getLevel() > level) {
                     return true;
                 }

@@ -11,7 +11,7 @@
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
         <adventure.scope>provided</adventure.scope>
-        <maven.compiler.release>17</maven.compiler.release>
+        <maven.compiler.release>11</maven.compiler.release>
         <paper.version>26.1.2.build.57-stable</paper.version>
         <bstats.version>3.1.0</bstats.version>
         <worldguard.version>7.0.13</worldguard.version>
@@ -78,7 +78,12 @@
             <version>${worldguard.version}</version>
             <scope>provided</scope>
         </dependency>
-        <!-- Kyori Adventure API for MiniMessage support -->
+        <!-- Kyori Adventure API (MiniMessage) — shaded into the plugin JAR and
+             relocated to an internal package so it works on both Paper (which
+             ships its own Adventure) and plain Spigot (which does not).
+             LoreUtil / InventoryCompat always use the bundled copy for string
+             parsing and then apply results via the universal legacy Item API,
+             so there is no class-type mismatch with the server's own Adventure. -->
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-api</artifactId>
@@ -92,7 +97,7 @@
         <dependency>
             <groupId>net.kyori</groupId>
             <artifactId>adventure-text-minimessage</artifactId>
-            <version>4.16.0</version>
+            <version>4.26.1</version>
         </dependency>
         <dependency>
             <groupId>net.kyori</groupId>
@@ -124,6 +129,13 @@
             <groupId>de.maxhenkel.voicechat</groupId>
             <artifactId>voicechat-api</artifactId>
             <version>2.2.5</version>
+            <scope>provided</scope>
+        </dependency>
+        <!-- EzCountdown: optional integration for configurable kick-warning displays -->
+        <dependency>
+            <groupId>com.github.ez-plugins</groupId>
+            <artifactId>ezcountdown</artifactId>
+            <version>2.0.0</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -263,6 +275,7 @@
                 <version>3.5.5</version>
                 <configuration>
                     <useModulePath>false</useModulePath>
+                    <argLine>-Dnet.bytebuddy.experimental=true</argLine>
                 </configuration>
             </plugin>
         </plugins>

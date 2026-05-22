@@ -17,6 +17,7 @@ import com.gyvex.ezafk.integration.TabIntegration;
 import com.gyvex.ezafk.integration.VoiceChatIntegration;
 import com.gyvex.ezafk.integration.WorldEditIntegration;
 import com.gyvex.ezafk.integration.WorldGuardIntegration;
+import com.gyvex.ezafk.integration.ezcountdown.EzCountdownIntegration;
 import com.gyvex.ezafk.manager.IntegrationManager;
 import com.gyvex.ezafk.state.AfkState;
 import com.gyvex.ezafk.manager.EconomyManager;
@@ -79,6 +80,15 @@ public class Bootstrap {
         if (enableVoicechatIntegration) {
             IntegrationManager.addIntegration("voicechat", new VoiceChatIntegration(plugin));
         }
+
+        String ezcountdownConfig = plugin.getConfig().getString("integration.ezcountdown", "auto").trim().toLowerCase();
+        boolean ezcountdownAvailable = plugin.getServer().getPluginManager().getPlugin("EzCountdown") != null;
+        boolean enableEzCountdown = "true".equals(ezcountdownConfig)
+                || ("auto".equals(ezcountdownConfig) && ezcountdownAvailable);
+        if (enableEzCountdown) {
+            IntegrationManager.addIntegration("ezcountdown", new EzCountdownIntegration());
+        }
+
         IntegrationManager.load();
 
         String storageType = plugin.getConfig().getString("storage.type", "yaml").trim().toLowerCase();

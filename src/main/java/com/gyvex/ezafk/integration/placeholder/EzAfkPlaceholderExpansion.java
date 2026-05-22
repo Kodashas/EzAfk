@@ -77,21 +77,21 @@ public class EzAfkPlaceholderExpansion extends PlaceholderExpansion {
 
         UUID playerId = offlinePlayer.getUniqueId();
 
-        return switch (params) {
-            case "status" -> AfkState.isAfk(playerId) ? "AFK" : "ACTIVE";
-            case "status_colored" -> AfkState.isAfk(playerId) ? "&cAFK" : "&aACTIVE";
-            case "since" -> formatDurationSeconds(AfkState.getSecondsSinceAfk(playerId));
-            case "last_active" -> formatDurationSeconds(LastActiveState.getSecondsSinceLastActive(playerId));
-            case "total_seconds" -> formatDurationSeconds(AfkState.getTotalAfkSeconds(playerId));
-            case "total" -> formatDurationPretty(AfkState.getTotalAfkSeconds(playerId));
-            case "total_formatted" -> formatDurationPretty(AfkState.getTotalAfkSeconds(playerId));
-            case "prefix" -> getConfigValue("afk.display-name.prefix");
-            case "suffix" -> getConfigValue("afk.display-name.suffix");
-            case "playtime_active_seconds" -> formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), false);
-            case "playtime_active" -> formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), true);
-            case "playtime_active_formatted" -> formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), true);
-            default -> "";
-        };
+        switch (params) {
+            case "status": return AfkState.isAfk(playerId) ? "AFK" : "ACTIVE";
+            case "status_colored": return AfkState.isAfk(playerId) ? "&cAFK" : "&aACTIVE";
+            case "since": return formatDurationSeconds(AfkState.getSecondsSinceAfk(playerId));
+            case "last_active": return formatDurationSeconds(LastActiveState.getSecondsSinceLastActive(playerId));
+            case "total_seconds": return formatDurationSeconds(AfkState.getTotalAfkSeconds(playerId));
+            case "total": return formatDurationPretty(AfkState.getTotalAfkSeconds(playerId));
+            case "total_formatted": return formatDurationPretty(AfkState.getTotalAfkSeconds(playerId));
+            case "prefix": return getConfigValue("afk.display-name.prefix");
+            case "suffix": return getConfigValue("afk.display-name.suffix");
+            case "playtime_active_seconds": return formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), false);
+            case "playtime_active": return formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), true);
+            case "playtime_active_formatted": return formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), true);
+            default: return "";
+        }
     }
 
     private String getConfigValue(String path) {
