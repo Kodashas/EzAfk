@@ -134,7 +134,7 @@ jobs:
           version: "${{ steps.meta.outputs.version }}"
           version-type: release
           files: target/ezafk-${{ steps.meta.outputs.version }}.jar
-          game-versions: ">=1.21"
+          game-versions: ">=1.19"
           game-versions-filter: release
           loaders: |
             bukkit
