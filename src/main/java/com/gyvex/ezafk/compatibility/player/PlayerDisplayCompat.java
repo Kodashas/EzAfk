@@ -73,8 +73,7 @@ public final class PlayerDisplayCompat {
             activeBossBars.put(playerId, bar);
 
             long ticksToRemove = Math.max(1L, (long) seconds * 20L);
-            Bukkit.getScheduler().runTaskLater(
-                    Registry.get().getPlugin(),
+            Registry.get().getScheduler().runTaskLater(
                     () -> removeWarningBossBar(playerId),
                     ticksToRemove);
         } catch (ClassNotFoundException | NoSuchMethodException
