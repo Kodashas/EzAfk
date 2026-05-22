@@ -20,14 +20,15 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Build and install MockBukkit dev-d245e0a
+      - name: Build and install MockBukkit (minecraft/v26 HEAD)
         run: |
-          git clone --filter=blob:none --no-checkout https://github.com/MockBukkit/MockBukkit.git /tmp/MockBukkit
-          cd /tmp/MockBukkit && git checkout d245e0a
-          ./gradlew publishToMavenLocal -xtest -xjavadoc
+          git clone --depth=1 --branch minecraft/v26 https://github.com/MockBukkit/MockBukkit.git /tmp/MockBukkit
+          MBVER="dev-$(git -C /tmp/MockBukkit rev-parse --short HEAD)"
+          echo "MOCKBUKKIT_VERSION=$MBVER" >> "$GITHUB_ENV"
+          cd /tmp/MockBukkit && ./gradlew publishToMavenLocal -xtest -xjavadoc
 
       - name: Run unit tests
-        run: mvn -B -ntp test
+        run: mvn -B -ntp -Dmockbukkit.version="$MOCKBUKKIT_VERSION" test
 
   feature-tests:
     name: Feature tests
@@ -45,14 +46,15 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Build and install MockBukkit dev-d245e0a
+      - name: Build and install MockBukkit (minecraft/v26 HEAD)
         run: |
-          git clone --filter=blob:none --no-checkout https://github.com/MockBukkit/MockBukkit.git /tmp/MockBukkit
-          cd /tmp/MockBukkit && git checkout d245e0a
-          ./gradlew publishToMavenLocal -xtest -xjavadoc
+          git clone --depth=1 --branch minecraft/v26 https://github.com/MockBukkit/MockBukkit.git /tmp/MockBukkit
+          MBVER="dev-$(git -C /tmp/MockBukkit rev-parse --short HEAD)"
+          echo "MOCKBUKKIT_VERSION=$MBVER" >> "$GITHUB_ENV"
+          cd /tmp/MockBukkit && ./gradlew publishToMavenLocal -xtest -xjavadoc
 
       - name: Run feature tests
-        run: mvn -B -ntp -Pfeature-tests -Dtest=*FeatureTest test
+        run: mvn -B -ntp -Pfeature-tests -Dtest=*FeatureTest -Dmockbukkit.version="$MOCKBUKKIT_VERSION" test
 
   # ──────────────────────────────────────────────────────────────────────────
   # SMOKE TESTS — verify EzAfk loads without errors on each server platform.
