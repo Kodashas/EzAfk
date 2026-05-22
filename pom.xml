@@ -17,7 +17,7 @@
         <worldguard.version>7.0.13</worldguard.version>
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
-        <jaloquent.version>1.2.1</jaloquent.version>
+        <jaloquent.version>1.3.2</jaloquent.version>
         <!-- GitHub repository used for publishing to GitHub Packages -->
         <github.repository>ez-plugins/ezafk</github.repository>
         <!-- All test sources require MockBukkit. Skip test compilation (and
@@ -165,13 +165,13 @@
         <dependency>
             <groupId>com.github.EzFramework</groupId>
             <artifactId>jaker</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
             <groupId>com.github.EzFramework.Jaker</groupId>
             <artifactId>jaker-data-en-US</artifactId>
-            <version>1.0.0</version>
+            <version>1.0.6</version>
             <scope>test</scope>
         </dependency>
         <dependency>
