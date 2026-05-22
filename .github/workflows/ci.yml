@@ -58,9 +58,12 @@ jobs:
 
   # ──────────────────────────────────────────────────────────────────────────
   # SMOKE TESTS — verify EzAfk loads without errors on each server platform.
-  # Matrix covers key stable 1.21.x releases × Java 21 & 25.
-  # Build uses -Dmaven.test.skip=true to skip test-compile (avoids needing
-  # the MockBukkit local install that only the unit/feature-test jobs prepare).
+  # Matrix: Java 21 & 25 (paper-api 26.x is compiled with Java 25/class v69;
+  # javac 17 cannot read those class files, so Java 17 build is not possible).
+  # The plugin JAR targets Java 17 bytecode (maven.compiler.release=17), so
+  # runtime compat with Java 17+ servers is guaranteed by the compiler flag.
+  # MC 1.21.x requires Java 21+ at runtime — minimum matrix entry is 21.
+  # Build uses -Dmaven.test.skip=true (avoids needing the MockBukkit install).
   # ──────────────────────────────────────────────────────────────────────────
 
   spigot-smoke-test:
@@ -70,7 +73,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17, 21, 25]
+        java: [21, 25]
 
     steps:
       - name: Checkout
@@ -85,14 +88,6 @@ jobs:
 
       - name: Build plugin JAR
         run: mvn -B -ntp -Dmaven.test.skip=true package
-
-      # MC 1.21.x requires Java 21+; upgrade JVM for server when built with Java 17
-      - name: Set up server JDK 21
-        if: matrix.java < 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
 
       - name: Cache Spigot 1.21.4 JAR
         id: spigot-cache
@@ -171,7 +166,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17, 21, 25]
+        java: [21, 25]
 
     steps:
       - name: Checkout
@@ -186,14 +181,6 @@ jobs:
 
       - name: Build plugin JAR
         run: mvn -B -ntp -Dmaven.test.skip=true package
-
-      # MC 1.21.x requires Java 21+; upgrade JVM for server when built with Java 17
-      - name: Set up server JDK 21
-        if: matrix.java < 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
 
       - name: Resolve latest Paper 1.21.11 build
         id: paper
@@ -273,7 +260,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [17, 21, 25]
+        java: [21, 25]
 
     steps:
       - name: Checkout
@@ -288,14 +275,6 @@ jobs:
 
       - name: Build plugin JAR
         run: mvn -B -ntp -Dmaven.test.skip=true package
-
-      # MC 1.21.x requires Java 21+; upgrade JVM for server when built with Java 17
-      - name: Set up server JDK 21
-        if: matrix.java < 21
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '21'
 
       - name: Resolve latest Folia 1.21.11 build
         id: folia
