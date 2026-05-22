@@ -48,7 +48,7 @@ class AfkTimeManagerTest {
         List<Map.Entry<UUID, Long>> finalTop = AfkTimeManager.getTopPlayers(3);
         assertEquals(List.of(playerFour, playerOne, playerTwo), extractPlayerOrder(finalTop));
 
-        assertEquals(50L, finalTop.getFirst().getValue());
+        assertEquals(50L, finalTop.get(0).getValue());
         assertEquals(40L, finalTop.get(1).getValue());
         assertEquals(30L, finalTop.get(2).getValue());
     }

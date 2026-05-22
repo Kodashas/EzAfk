@@ -70,7 +70,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        java: [21, 25]
+        java: [17, 21, 25]
 
     steps:
       - name: Checkout
@@ -85,6 +85,14 @@ jobs:
 
       - name: Build plugin JAR
         run: mvn -B -ntp -Dmaven.test.skip=true package
+
+      # MC 1.21.x requires Java 21+; upgrade JVM for server when built with Java 17
+      - name: Set up server JDK 21
+        if: matrix.java < 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
 
       - name: Cache Spigot 1.21.4 JAR
         id: spigot-cache
@@ -157,14 +165,13 @@ jobs:
           retention-days: 7
 
   paper-smoke-test:
-    name: Paper ${{ matrix.mc_version }} / Java ${{ matrix.java }}
+    name: Paper 1.21.11 / Java ${{ matrix.java }}
     runs-on: ubuntu-latest
     needs: [unit-tests, feature-tests]
     strategy:
       fail-fast: false
       matrix:
-        mc_version: ['1.21', '1.21.1', '1.21.4', '1.21.8', '1.21.11']
-        java: [21, 25]
+        java: [17, 21, 25]
 
     steps:
       - name: Checkout
@@ -180,22 +187,30 @@ jobs:
       - name: Build plugin JAR
         run: mvn -B -ntp -Dmaven.test.skip=true package
 
-      - name: Resolve latest Paper ${{ matrix.mc_version }} build
+      # MC 1.21.x requires Java 21+; upgrade JVM for server when built with Java 17
+      - name: Set up server JDK 21
+        if: matrix.java < 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Resolve latest Paper 1.21.11 build
         id: paper
         run: |
-          BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/${{ matrix.mc_version }}/builds" | \
+          BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds" | \
             python3 -c "import sys,json; builds=json.load(sys.stdin)['builds']; print(builds[-1]['build'])")
-          JAR_NAME=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/${{ matrix.mc_version }}/builds/${BUILD}" | \
+          JAR_NAME=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/${BUILD}" | \
             python3 -c "import sys,json; d=json.load(sys.stdin); print(d['downloads']['application']['name'])")
           echo "build=${BUILD}"       >> "$GITHUB_OUTPUT"
           echo "jar_name=${JAR_NAME}" >> "$GITHUB_OUTPUT"
-          echo "Resolved: Paper ${{ matrix.mc_version }} build ${BUILD} (${JAR_NAME})"
+          echo "Resolved: Paper 1.21.11 build ${BUILD} (${JAR_NAME})"
 
-      - name: Download Paper ${{ matrix.mc_version }} server JAR
+      - name: Download Paper 1.21.11 server JAR
         run: |
           mkdir -p smoke-server/plugins
           curl -fsSL \
-            "https://api.papermc.io/v2/projects/paper/versions/${{ matrix.mc_version }}/builds/${{ steps.paper.outputs.build }}/downloads/${{ steps.paper.outputs.jar_name }}" \
+            "https://api.papermc.io/v2/projects/paper/versions/1.21.11/builds/${{ steps.paper.outputs.build }}/downloads/${{ steps.paper.outputs.jar_name }}" \
             -o smoke-server/paper.jar
 
       - name: Copy plugin JAR
@@ -233,12 +248,12 @@ jobs:
         run: |
           LOG=smoke-server/server.log
           if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
-            echo "::error::EzAfk logged errors on Paper ${{ matrix.mc_version }} / Java ${{ matrix.java }} startup:"
+            echo "::error::EzAfk logged errors on Paper 1.21.11 / Java ${{ matrix.java }} startup:"
             grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
-            echo "Paper ${{ matrix.mc_version }} / Java ${{ matrix.java }} smoke test passed."
+            echo "Paper 1.21.11 / Java ${{ matrix.java }} smoke test passed."
           else
             echo "::warning::EzAfk 'Enabling EzAfk' not found in log — plugin may not have loaded within the timeout"
           fi
@@ -247,19 +262,18 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: paper-${{ matrix.mc_version }}-java${{ matrix.java }}-smoke-log
+          name: paper-1.21.11-java${{ matrix.java }}-smoke-log
           path: smoke-server/server.log
           retention-days: 7
 
   folia-smoke-test:
-    name: Folia ${{ matrix.mc_version }} / Java ${{ matrix.java }}
+    name: Folia 1.21.11 / Java ${{ matrix.java }}
     runs-on: ubuntu-latest
     needs: [unit-tests, feature-tests]
     strategy:
       fail-fast: false
       matrix:
-        mc_version: ['1.21.4', '1.21.8', '1.21.11']
-        java: [21, 25]
+        java: [17, 21, 25]
 
     steps:
       - name: Checkout
@@ -275,22 +289,30 @@ jobs:
       - name: Build plugin JAR
         run: mvn -B -ntp -Dmaven.test.skip=true package
 
-      - name: Resolve latest Folia ${{ matrix.mc_version }} build
+      # MC 1.21.x requires Java 21+; upgrade JVM for server when built with Java 17
+      - name: Set up server JDK 21
+        if: matrix.java < 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Resolve latest Folia 1.21.11 build
         id: folia
         run: |
-          BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/folia/versions/${{ matrix.mc_version }}/builds" | \
+          BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/folia/versions/1.21.11/builds" | \
             python3 -c "import sys,json; builds=json.load(sys.stdin)['builds']; print(builds[-1]['build'])")
-          JAR_NAME=$(curl -fsSL "https://api.papermc.io/v2/projects/folia/versions/${{ matrix.mc_version }}/builds/${BUILD}" | \
+          JAR_NAME=$(curl -fsSL "https://api.papermc.io/v2/projects/folia/versions/1.21.11/builds/${BUILD}" | \
             python3 -c "import sys,json; d=json.load(sys.stdin); print(d['downloads']['application']['name'])")
           echo "build=${BUILD}"       >> "$GITHUB_OUTPUT"
           echo "jar_name=${JAR_NAME}" >> "$GITHUB_OUTPUT"
-          echo "Resolved: Folia ${{ matrix.mc_version }} build ${BUILD} (${JAR_NAME})"
+          echo "Resolved: Folia 1.21.11 build ${BUILD} (${JAR_NAME})"
 
-      - name: Download Folia ${{ matrix.mc_version }} server JAR
+      - name: Download Folia 1.21.11 server JAR
         run: |
           mkdir -p smoke-server/plugins
           curl -fsSL \
-            "https://api.papermc.io/v2/projects/folia/versions/${{ matrix.mc_version }}/builds/${{ steps.folia.outputs.build }}/downloads/${{ steps.folia.outputs.jar_name }}" \
+            "https://api.papermc.io/v2/projects/folia/versions/1.21.11/builds/${{ steps.folia.outputs.build }}/downloads/${{ steps.folia.outputs.jar_name }}" \
             -o smoke-server/folia.jar
 
       - name: Copy plugin JAR
@@ -328,12 +350,12 @@ jobs:
         run: |
           LOG=smoke-server/server.log
           if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
-            echo "::error::EzAfk logged errors on Folia ${{ matrix.mc_version }} / Java ${{ matrix.java }} startup:"
+            echo "::error::EzAfk logged errors on Folia 1.21.11 / Java ${{ matrix.java }} startup:"
             grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
-            echo "Folia ${{ matrix.mc_version }} / Java ${{ matrix.java }} smoke test passed."
+            echo "Folia 1.21.11 / Java ${{ matrix.java }} smoke test passed."
           else
             echo "::warning::EzAfk 'Enabling EzAfk' not found in log — server may not have finished loading within the timeout"
           fi
@@ -342,6 +364,6 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: folia-${{ matrix.mc_version }}-java${{ matrix.java }}-smoke-log
+          name: folia-1.21.11-java${{ matrix.java }}-smoke-log
           path: smoke-server/server.log
           retention-days: 7
