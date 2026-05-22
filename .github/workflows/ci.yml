@@ -59,10 +59,11 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   # SMOKE TESTS — verify EzAfk loads without errors on each server platform.
   #
-  # Modern matrix (Java 21 & 25):
-  #   paper-api 26.x is compiled with Java 25 (class version 69); javac 17
-  #   cannot read those class files, so Java 17 cannot build the plugin.
-  #   MC 1.21.x also requires Java 21+ at runtime — minimum entry is 21.
+  # All modern smoke jobs build with JDK 25 only:
+  #   paper-api 26.x is compiled with Java 25 (class version 69); any JDK
+  #   older than 25 cannot read those class files and the build fails.
+  #   maven.compiler.release=17 guarantees Java 17 output bytecode, so the
+  #   plugin runs on any Java 17+ server regardless of the build JDK.
   #
   # Legacy job (paper-legacy-smoke-test — Paper 1.20.4 / Java 17):
   #   Paper 1.20.4 is the last MC version that accepts Java 17 at runtime.
@@ -74,27 +75,33 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
 
   spigot-smoke-test:
-    name: Spigot 1.21.4 / Java ${{ matrix.java }}
+    name: Spigot 1.21.4 (build JDK 25 / server JDK 21)
     runs-on: ubuntu-latest
     needs: [unit-tests, feature-tests]
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [21, 25]
+    # BuildTools for Spigot 1.21.4 requires Java 21–24 (javaVersions [65,68]).
+    # JDK 25 is rejected by BuildTools even though the server itself runs fine
+    # on any Java 21+ JVM. Strategy: compile the plugin with JDK 25 (paper-api
+    # 26.x needs it), then swap to JDK 21 for BuildTools and server launch.
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up build JDK 25
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: '25'
           cache: maven
 
-      - name: Build plugin JAR
+      - name: Build plugin JAR (JDK 25, java-17 bytecode)
         run: mvn -B -ntp -Dmaven.test.skip=true package
+
+      - name: Set up server JDK 21
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
 
       - name: Cache Spigot 1.21.4 JAR
         id: spigot-cache
@@ -148,12 +155,12 @@ jobs:
         run: |
           LOG=smoke-server/server.log
           if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
-            echo "::error::EzAfk logged errors on Spigot 1.21.4 / Java ${{ matrix.java }} startup:"
+            echo "::error::EzAfk logged errors on Spigot 1.21.4 / Java 21 startup:"
             grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
-            echo "Spigot 1.21.4 / Java ${{ matrix.java }} smoke test passed."
+            echo "Spigot 1.21.4 / Java 21 smoke test passed."
           else
             echo "::warning::EzAfk 'Enabling EzAfk' not found in log — plugin may not have loaded within the timeout"
           fi
@@ -162,28 +169,24 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: spigot-1.21.4-java${{ matrix.java }}-smoke-log
+          name: spigot-1.21.4-java21-smoke-log
           path: smoke-server/server.log
           retention-days: 7
 
   paper-smoke-test:
-    name: Paper 1.21.11 / Java ${{ matrix.java }}
+    name: Paper 1.21.11 / Java 25
     runs-on: ubuntu-latest
     needs: [unit-tests, feature-tests]
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [21, 25]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: '25'
           cache: maven
 
       - name: Build plugin JAR
@@ -242,12 +245,12 @@ jobs:
         run: |
           LOG=smoke-server/server.log
           if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
-            echo "::error::EzAfk logged errors on Paper 1.21.11 / Java ${{ matrix.java }} startup:"
+            echo "::error::EzAfk logged errors on Paper 1.21.11 / Java 25 startup:"
             grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
-            echo "Paper 1.21.11 / Java ${{ matrix.java }} smoke test passed."
+            echo "Paper 1.21.11 / Java 25 smoke test passed."
           else
             echo "::warning::EzAfk 'Enabling EzAfk' not found in log — plugin may not have loaded within the timeout"
           fi
@@ -256,28 +259,24 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: paper-1.21.11-java${{ matrix.java }}-smoke-log
+          name: paper-1.21.11-java25-smoke-log
           path: smoke-server/server.log
           retention-days: 7
 
   folia-smoke-test:
-    name: Folia 1.21.11 / Java ${{ matrix.java }}
+    name: Folia 1.21.11 / Java 25
     runs-on: ubuntu-latest
     needs: [unit-tests, feature-tests]
-    strategy:
-      fail-fast: false
-      matrix:
-        java: [21, 25]
 
     steps:
       - name: Checkout
         uses: actions/checkout@v5
 
-      - name: Set up JDK ${{ matrix.java }}
+      - name: Set up JDK 25
         uses: actions/setup-java@v5
         with:
           distribution: temurin
-          java-version: ${{ matrix.java }}
+          java-version: '25'
           cache: maven
 
       - name: Build plugin JAR
@@ -336,12 +335,12 @@ jobs:
         run: |
           LOG=smoke-server/server.log
           if grep -qiE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"; then
-            echo "::error::EzAfk logged errors on Folia 1.21.11 / Java ${{ matrix.java }} startup:"
+            echo "::error::EzAfk logged errors on Folia 1.21.11 / Java 25 startup:"
             grep -iE "SEVERE.*[Ee]z[Aa]fk|Could not load.*[Ee]z[Aa]fk|Error.*[Ee]z[Aa]fk" "$LOG"
             exit 1
           fi
           if grep -qiE "Enabling EzAfk" "$LOG"; then
-            echo "Folia 1.21.11 / Java ${{ matrix.java }} smoke test passed."
+            echo "Folia 1.21.11 / Java 25 smoke test passed."
           else
             echo "::warning::EzAfk 'Enabling EzAfk' not found in log — server may not have finished loading within the timeout"
           fi
@@ -350,7 +349,7 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: folia-1.21.11-java${{ matrix.java }}-smoke-log
+          name: folia-1.21.11-java25-smoke-log
           path: smoke-server/server.log
           retention-days: 7
 

@@ -6,7 +6,7 @@
 
     <groupId>com.gyvex</groupId>
     <artifactId>ezafk</artifactId>
-    <version>3.0.0</version>
+    <version>3.0.1</version>
 
     <properties>
         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
@@ -18,9 +18,11 @@
         <maven.compiler.plugin.version>3.15.0</maven.compiler.plugin.version>
         <maven.shade.plugin.version>3.6.2</maven.shade.plugin.version>
         <jaloquent.version>1.2.1</jaloquent.version>
-        <mockbukkit.version>dev-6d384d3</mockbukkit.version>
         <!-- GitHub repository used for publishing to GitHub Packages -->
         <github.repository>ez-plugins/ezafk</github.repository>
+        <!-- All test sources require MockBukkit. Skip test compilation (and
+             execution) by default; the with-mockbukkit profile re-enables it. -->
+        <maven.test.skip>true</maven.test.skip>
     </properties>
 
     <repositories>
@@ -112,10 +114,16 @@
             <artifactId>jlayer</artifactId>
             <version>1.0.1</version>
         </dependency>
+        <!-- Compile against the oldest compatible API version so the plugin
+             works with any SVC 2.2.5 through the latest 2.6.x release
+             (MC 1.19–latest). The SVC API is additive between 2.x minor
+             versions; every method we call exists in 2.2.5+, so no SVC
+             version that supports our target MC range will throw
+             NoSuchMethodError — including the latest SVC releases. -->
         <dependency>
             <groupId>de.maxhenkel.voicechat</groupId>
             <artifactId>voicechat-api</artifactId>
-            <version>2.6.0</version>
+            <version>2.2.5</version>
             <scope>provided</scope>
         </dependency>
         <dependency>
@@ -158,13 +166,6 @@
             <groupId>org.junit.jupiter</groupId>
             <artifactId>junit-jupiter</artifactId>
             <version>5.10.2</version>
-            <scope>test</scope>
-        </dependency>
-        <!-- MockBukkit for plugin tests (mock server environment) -->
-        <dependency>
-            <groupId>org.mockbukkit.mockbukkit</groupId>
-            <artifactId>mockbukkit-v26.1.2</artifactId>
-            <version>${mockbukkit.version}</version>
             <scope>test</scope>
         </dependency>
         <dependency>
@@ -274,4 +275,33 @@
             <url>https://maven.pkg.github.com/${github.repository}</url>
         </repository>
     </distributionManagement>
+
+    <profiles>
+        <!--
+            Activated automatically when -Dmockbukkit.version=<ver> is passed (e.g. in CI).
+            Kept separate because MockBukkit is a locally-built artifact not available in
+            any public Maven repository; including it in the default dependency set would
+            break 'mvn package' on machines that have not pre-built MockBukkit.
+        -->
+        <profile>
+            <id>with-mockbukkit</id>
+            <activation>
+                <property>
+                    <name>mockbukkit.version</name>
+                </property>
+            </activation>
+            <properties>
+                <!-- Re-enable test compilation and execution when MockBukkit is present. -->
+                <maven.test.skip>false</maven.test.skip>
+            </properties>
+            <dependencies>
+                <dependency>
+                    <groupId>org.mockbukkit.mockbukkit</groupId>
+                    <artifactId>mockbukkit-v26.1.2</artifactId>
+                    <version>${mockbukkit.version}</version>
+                    <scope>test</scope>
+                </dependency>
+            </dependencies>
+        </profile>
+    </profiles>
 </project>
