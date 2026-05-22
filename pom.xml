@@ -163,7 +163,7 @@
         <!-- MockBukkit for plugin tests (mock server environment) -->
         <dependency>
             <groupId>org.mockbukkit.mockbukkit</groupId>
-            <artifactId>mockbukkit-v26.1</artifactId>
+            <artifactId>mockbukkit-v26.1.2</artifactId>
             <version>${mockbukkit.version}</version>
             <scope>test</scope>
         </dependency>
