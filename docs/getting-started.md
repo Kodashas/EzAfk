@@ -11,12 +11,12 @@ This page walks you through installing EzAfk on your server and running it for t
 
 ## Requirements
 
-- Paper, Spigot, Bukkit, or Purpur **1.19+**
-- Java **17** or newer
+- Paper, Spigot, Bukkit, or Purpur **1.21+**
+- Java **21** or newer
 
 ### Server version compatibility
 
-EzAfk supports Minecraft **1.19 and newer**. Some features rely on additions made in later releases;
+EzAfk supports Minecraft **1.21 and newer**. Some features rely on additions made in later releases;
 the table below shows where runtime behaviour differs by MC version.
 
 | Feature | Min MC | Notes |
@@ -28,10 +28,9 @@ the table below shows where runtime behaviour differs by MC version.
 | Simple Voice Chat sound | Any | Requires the [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) plugin |
 | Economy costs / zone economy rewards | Any | Requires a [Vault](https://www.spigotmc.org/resources/vault.34315/)-compatible economy plugin |
 | GUI item metadata (PersistentDataContainer) | 1.14 | Falls back to lore-based metadata on older versions |
-| InventoryView API | 1.19–1.21+ | Class → interface change in 1.21 handled automatically |
+| InventoryView API | 1.21+ | Class → interface change in 1.21 handled automatically |
 
-> **Java runtime requirement by MC version:**
-> MC 1.19–1.20.4 can run on Java 17 or newer. MC 1.20.5+ requires Java 21 or newer.
+See [Configuration](configuration) for every available option.
 
 ---
 

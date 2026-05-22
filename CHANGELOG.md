@@ -27,6 +27,17 @@ Release tags use the `v` prefix (e.g. `v3.0.0`).
 - `CompatibilityUtil` now handles `sendActionBar`, `showBossBarWarning`, and
   `removeWarningBossBar` via reflection — safe on servers without the BossBar
   API (pre-1.9) or without the action-bar method available.
+- **Java 21+ is now required.** `maven.compiler.release` raised from `11` to
+  `21`; the plugin JAR targets Java 21 bytecode (class file version 65).
+  Servers running Minecraft 1.21+ already require Java 21, so this is a no-op
+  for all supported server versions.
+- Minimum supported Minecraft version is now **1.21** (was 1.19). Older
+  versions are no longer tested or guaranteed to work.
+
+### Removed
+
+- Paper 1.20.4 / Java 17 legacy CI smoke test (not needed after dropping Java 17
+  support).
 
 ---
 

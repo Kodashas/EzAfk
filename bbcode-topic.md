@@ -7,11 +7,11 @@
 
 [B][SIZE=6]Keep AFK management simple[/SIZE][/B]
 
-[B]EzAfk[/B] is a modern, lightweight AFK management plugin built for Paper and Spigot servers running Minecraft 26.1+ and Java 25. It automates AFK detection, rewards or charges players based on AFK state, provides staff overview tools, and integrates with the systems you already use, all without sacrificing performance.
+[B]EzAfk[/B] is a modern, lightweight AFK management plugin built for Paper and Spigot servers running Minecraft **1.21+** and Java **21+**. It automates AFK detection, rewards or charges players based on AFK state, provides staff overview tools, and integrates with the systems you already use, all without sacrificing performance.
 
-[IMG]https://img.shields.io/badge/version-3.0.0-blue[/IMG]
-[IMG]https://img.shields.io/badge/Minecraft-26.1-green[/IMG]
-[IMG]https://img.shields.io/badge/Java-25-orange[/IMG]
+[IMG]https://img.shields.io/badge/version-3.0.1-blue[/IMG]
+[IMG]https://img.shields.io/badge/Minecraft-1.21%2B-green[/IMG]
+[IMG]https://img.shields.io/badge/Java-21%2B-orange[/IMG]
 
 Download on [URL='https://modrinth.com/plugin/ezafk'][B]Modrinth[/B][/URL] · Found an issue or have a question? Join [URL='https://discord.gg/yWP95XfmBS']the EzPlugins Discord server[/URL].
 

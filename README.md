@@ -7,6 +7,8 @@
 
 EzAfk is a powerful and flexible AFK (Away From Keyboard) management plugin for Minecraft servers. It provides advanced AFK detection, player management, and integration with popular plugins and server features.
 
+**Requirements:** Paper / Spigot / Bukkit / Purpur 1.21+ · Java 21+
+
 ## Features
 - Automatic AFK detection and management
 - AFK kick warnings and configurable actions

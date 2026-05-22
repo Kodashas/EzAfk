@@ -59,17 +59,11 @@ jobs:
   # ──────────────────────────────────────────────────────────────────────────
   # SMOKE TESTS — verify EzAfk loads without errors on each server platform.
   #
-  # All modern smoke jobs build with JDK 25 only:
-  #   paper-api 26.x is compiled with Java 25 (class version 69); any JDK
-  #   older than 25 cannot read those class files and the build fails.
-  #   maven.compiler.release=17 guarantees Java 17 output bytecode, so the
-  #   plugin runs on any Java 17+ server regardless of the build JDK.
-  #
-  # Legacy job (paper-legacy-smoke-test — Paper 1.20.4 / Java 17):
-  #   Paper 1.20.4 is the last MC version that accepts Java 17 at runtime.
-  #   MC 1.20.5/1.20.6+ require Java 21. The plugin is built with JDK 25
-  #   (maven.compiler.release=17 → Java 17 bytecode), then the server is
-  #   started with JDK 17 to verify genuine legacy server compatibility.
+  # All smoke jobs build with JDK 25:
+  #   paper-api 26.x uses Java 25 class files (version 69); older JDKs
+  #   cannot read them and the build fails.
+  #   maven.compiler.release=21 → plugin JAR targets Java 21 bytecode,
+  #   compatible with every Minecraft 1.21+ server (Java 21+ required).
   #
   # Build uses -Dmaven.test.skip=true (avoids needing the MockBukkit install).
   # ──────────────────────────────────────────────────────────────────────────
@@ -94,7 +88,7 @@ jobs:
           java-version: '25'
           cache: maven
 
-      - name: Build plugin JAR (JDK 25, java-17 bytecode)
+      - name: Build plugin JAR (JDK 25)
         run: mvn -B -ntp -Dmaven.test.skip=true package
 
       - name: Set up server JDK 21
@@ -353,128 +347,3 @@ jobs:
           path: smoke-server/server.log
           retention-days: 7
 
-  # ──────────────────────────────────────────────────────────────────────────
-  # LEGACY SMOKE TEST — Paper 1.20.4 / Java 17
-  # Last MC version that runs on Java 17 (1.20.5+ requires Java 21).
-  # Build with JDK 25, then start the server with JDK 17.
-  # ──────────────────────────────────────────────────────────────────────────
-  paper-legacy-smoke-test:
-    name: Paper 1.20.4 / Java 17 (legacy compat)
-    runs-on: ubuntu-latest
-    needs: [unit-tests, feature-tests]
-
-    steps:
-      - name: Checkout
-        uses: actions/checkout@v5
-
-      - name: Set up build JDK 25
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '25'
-          cache: maven
-
-      - name: Rebuild EzFramework libs (Java 11 target)
-        # JitPack builds these with Java 21 (class file version 65).
-        # Java 17 servers only accept up to class file version 61, so we
-        # rebuild both from source targeting Java 11 and install locally so
-        # the shade plugin picks up the compatible bytecode.
-        run: |
-          patch_java() {
-            sed -i \
-              -e 's|<java.version>21</java.version>|<java.version>11</java.version>|' \
-              -e 's|<maven.compiler.release>21</maven.compiler.release>|<maven.compiler.release>11</maven.compiler.release>|' \
-              -e 's|<maven.compiler.source>21</maven.compiler.source>|<maven.compiler.source>11</maven.compiler.source>|' \
-              -e 's|<maven.compiler.target>21</maven.compiler.target>|<maven.compiler.target>11</maven.compiler.target>|' \
-              pom.xml
-          }
-          # 1. JavaQueryBuilder (transitive dep of Jaloquent, also shaded)
-          git clone --depth=1 https://github.com/EzFramework/JavaQueryBuilder.git /tmp/JavaQueryBuilder
-          cd /tmp/JavaQueryBuilder
-          patch_java
-          mvn -q clean install -Dmaven.test.skip=true
-          # 2. Jaloquent (direct dep, also shaded)
-          git clone --depth=1 https://github.com/EzFramework/Jaloquent.git /tmp/Jaloquent
-          cd /tmp/Jaloquent
-          patch_java
-          mvn -q clean install -Dmaven.test.skip=true
-
-      - name: Build plugin JAR (JDK 25, java-17 bytecode)
-        run: mvn -B -ntp -Dmaven.test.skip=true package
-
-      - name: Set up server JDK 17
-        uses: actions/setup-java@v5
-        with:
-          distribution: temurin
-          java-version: '17'
-
-      - name: Resolve latest Paper 1.20.4 build
-        id: paper
-        run: |
-          BUILD=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds" | \
-            python3 -c "import sys,json; builds=json.load(sys.stdin)['builds']; print(builds[-1]['build'])")
-          JAR_NAME=$(curl -fsSL "https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/${BUILD}" | \
-            python3 -c "import sys,json; d=json.load(sys.stdin); print(d['downloads']['application']['name'])")
-          echo "build=${BUILD}"       >> "$GITHUB_OUTPUT"
-          echo "jar_name=${JAR_NAME}" >> "$GITHUB_OUTPUT"
-          echo "Resolved: Paper 1.20.4 build ${BUILD} (${JAR_NAME})"
-
-      - name: Download Paper 1.20.4 server JAR
-        run: |
-          mkdir -p smoke-server/plugins
-          curl -fsSL \
-            "https://api.papermc.io/v2/projects/paper/versions/1.20.4/builds/${{ steps.paper.outputs.build }}/downloads/${{ steps.paper.outputs.jar_name }}" \
-            -o smoke-server/paper.jar
-
-      - name: Copy plugin JAR
-        run: cp target/ezafk-*.jar smoke-server/plugins/EzAfk.jar
-
-      - name: Configure server
-        run: |
-          echo "eula=true" > smoke-server/eula.txt
-          printf '%s\n' \
-            "online-mode=false" \
-            "level-type=flat" \
-            "generate-structures=false" \
-            "max-players=0" \
-            > smoke-server/server.properties
-
-      - name: Run server (Java 17) and wait for ready
-        run: |
-          cd smoke-server
-          java -Xms512m -Xmx1g -jar paper.jar --nogui > server.log 2>&1 &
-          SERVER_PID=$!
-          ELAPSED=0
-          while [ $ELAPSED -lt 120 ]; do
-            sleep 2; ELAPSED=$((ELAPSED + 2))
-            if grep -q "Done (" server.log 2>/dev/null; then
-              echo "Server ready after ${ELAPSED}s"; break
-            fi
-            if ! kill -0 $SERVER_PID 2>/dev/null; then
-              echo "Server process exited after ${ELAPSED}s"; break
-            fi
-          done
-          kill $SERVER_PID 2>/dev/null || true
-          wait $SERVER_PID 2>/dev/null || true
-
-      - name: Assert no EzAfk errors
-        run: |
-          LOG=smoke-server/server.log
-          if grep -qE "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"; then
-            echo "::error::EzAfk logged errors on Paper 1.20.4 / Java 17 startup:"
-            grep -E "(SEVERE|ERROR).*EzAfk|Could not load.*EzAfk" "$LOG"
-            exit 1
-          fi
-          if grep -qiE "Enabling EzAfk" "$LOG"; then
-            echo "Paper 1.20.4 / Java 17 legacy smoke test passed."
-          else
-            echo "::warning::EzAfk 'Enabling EzAfk' not found in log — plugin may not have loaded within the timeout"
-          fi
-
-      - name: Upload server log
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: paper-1.20.4-java17-smoke-log
-          path: smoke-server/server.log
-          retention-days: 7
