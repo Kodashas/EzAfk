@@ -170,7 +170,6 @@ afkzone:
 Both messages support the `%zone%` placeholder, which is replaced with the zone's name.
 Set either value to an empty string (`""`) to suppress that notification.
 
-
 Zones can be created and managed with `/afk zone` without editing `zones.yml` directly:
 
 | Subcommand | Description |
