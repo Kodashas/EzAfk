@@ -1,11 +1,13 @@
 package com.gyvex.ezafk.listener;
 
 import com.gyvex.ezafk.EzAfk;
+import com.gyvex.ezafk.manager.AfkZoneManager;
 import com.gyvex.ezafk.manager.MessageManager;
 import com.gyvex.ezafk.state.AfkActivationMode;
 import com.gyvex.ezafk.state.AfkReason;
 import com.gyvex.ezafk.state.AfkState;
 import com.gyvex.ezafk.state.LastActiveState;
+import com.gyvex.ezafk.zone.Zone;
 import org.bukkit.Location;
 import org.bukkit.Material;
 import org.bukkit.block.Block;
@@ -17,7 +19,9 @@ import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerMoveEvent;
 
+import java.util.HashMap;
 import java.util.HashSet;
+import java.util.Map;
 import java.util.Set;
 import java.util.UUID;
 
@@ -26,6 +30,8 @@ public class MoveListener implements Listener {
     private final Set<UUID> vehicleBypassHandled = new HashSet<>();
     private final Set<UUID> infiniteWaterFlowHandled = new HashSet<>();
     private final Set<UUID> bubbleColumnHandled = new HashSet<>();
+    /** Tracks the AFK zone name each player was in after their last position change. */
+    private static final Map<UUID, String> playerZoneCache = new HashMap<>();
 
     public MoveListener(EzAfk plugin) {
         this.plugin = plugin;
@@ -97,12 +103,44 @@ public class MoveListener implements Listener {
         }
 
         LastActiveState.update(player);
+        checkZoneTransition(player);
         vehicleBypassHandled.remove(playerId);
         infiniteWaterFlowHandled.remove(playerId);
 
         if (AfkState.isAfk(playerId)) {
             AfkState.disable(this.plugin, player);
         }
+    }
+
+    private void checkZoneTransition(Player player) {
+        Zone current = AfkZoneManager.getZoneForPlayer(player);
+        String currentName = current == null ? null : current.name;
+        UUID playerId = player.getUniqueId();
+        String previousName = playerZoneCache.get(playerId);
+
+        if (currentName == null && previousName == null) return;
+        if (currentName != null && currentName.equals(previousName)) return;
+
+        if (currentName != null) {
+            // Entered a zone (or moved from one zone directly into another)
+            Map<String, String> ph = new HashMap<>();
+            ph.put("zone", currentName);
+            MessageManager.sendMessage(player, "afkzone.enter",
+                    "&aYou have entered the AFK zone &e%zone%&a.", ph);
+            playerZoneCache.put(playerId, currentName);
+        } else {
+            // Exited a zone
+            Map<String, String> ph = new HashMap<>();
+            ph.put("zone", previousName);
+            MessageManager.sendMessage(player, "afkzone.exit",
+                    "&7You have left the AFK zone &e%zone%&7.", ph);
+            playerZoneCache.remove(playerId);
+        }
+    }
+
+    /** Called by {@link PlayerQuitListener} to clean up cached zone state. */
+    public static void clearZoneState(UUID playerId) {
+        playerZoneCache.remove(playerId);
     }
 
     private void markBypass(Player player, AfkReason reason, String detail) {

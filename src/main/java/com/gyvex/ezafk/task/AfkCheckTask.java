@@ -78,6 +78,11 @@ public class AfkCheckTask extends BukkitRunnable {
     }
 
     private boolean shouldBypassAfkCheck(Player player, UUID playerId) {
+        // Blacklist always wins — explicitly prevents bypass even for ops
+        if (com.gyvex.ezafk.manager.BypassListManager.isBlacklisted(playerId)) return false;
+        // Whitelist always grants bypass regardless of config/permission
+        if (com.gyvex.ezafk.manager.BypassListManager.isWhitelisted(playerId)) return true;
+        // Standard config-based bypass
         EzAfk plugin = Registry.get().getPlugin();
         return plugin.getConfig().getBoolean("afk.bypass.enabled")
                 && (player.hasPermission("ezafk.bypass") || AfkState.isBypassed(playerId));

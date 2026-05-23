@@ -57,6 +57,22 @@ afk:
 - Players with the `ezafk.bypass` permission are not subject to anti-bypass checks when
   `afk.bypass.enabled` is `true`.
 
+## Bypass Whitelist & Blacklist
+
+For admin-level control over who can and cannot bypass AFK detection, EzAfk provides two
+persistent lists managed with `/afk bypass whitelist` and `/afk bypass blacklist`:
+
+- **Whitelist** — players that *always* bypass AFK detection, regardless of the
+  `afk.bypass.enabled` config flag or whether they hold the `ezafk.bypass` permission.
+- **Blacklist** — players that are *never* allowed to bypass, even when they hold
+  `ezafk.bypass`. Useful for ops or admins who want to be subject to normal AFK detection
+  for testing or fairness. The blacklist takes precedence over the whitelist.
+
+Both lists are stored in `plugins/EzAfk/bypass-lists.yml` and reloaded on `/afk reload`.
+Requires the `ezafk.bypass.manage` permission.
+
+See [Commands](../commands) for full usage of the `whitelist` and `blacklist` subcommands.
+
 ## Related
 
 - [AFK Detection](afk-detection): the core idle detection system

@@ -10,9 +10,60 @@ Release tags use the `v` prefix (e.g. `v3.0.0`).
 
 ## [Unreleased]
 
+---
+
+## [3.1.0] - 2026-05-23
+
+[Modrinth](https://modrinth.com/plugin/ezafk/version/3.1.0)
+
 ### Added
 
-- **EzCountdown integration** — EzAfk now optionally integrates with the
+- **Bypass whitelist and blacklist** - Two persistent lists (stored in
+  `bypass-lists.yml`) let admins fine-tune who bypasses AFK detection:
+  - **Whitelist** — players that *always* bypass, regardless of the
+    `afk.bypass.enabled` config flag or whether they hold the `ezafk.bypass`
+    permission.
+  - **Blacklist** - players that are *never* allowed to bypass, even when they
+    hold `ezafk.bypass` (useful for ops/admins who want to be subject to AFK
+    detection and zone rewards for testing or fairness).
+  - Blacklist takes precedence over whitelist.
+  - Managed in-game with `/afk bypass whitelist <add|remove|list> [player]`
+    and `/afk bypass blacklist <add|remove|list> [player]`
+    (requires `ezafk.bypass.manage`).
+  - Tab completion is provided for all three argument depths.
+  - Lists are reloaded on `/afk reload`.
+- **AFK zone entry / exit messages** - Players now receive a chat message when
+  they enter or leave an AFK zone (`afkzone.enter` / `afkzone.exit` message
+  keys in `messages.yml`; both support the `%zone%` placeholder).
+
+- **AFK zone reward countdowns via EzCountdown** - When
+  [EzCountdown](https://github.com/ez-plugins/EzCountdown) is installed,
+  players in AFK zones see a live countdown to their next reward (action bar,
+  title, boss bar, scoreboard, or dialog — configurable per zone). The countdown
+  resets automatically after each payout.
+- **Global zone reward defaults** - A top-level `defaults.reward` block in
+  `zones.yml` lets you configure economy reward amount, interval, and
+  notification settings once for all zones. Individual zones can still override
+  any value. When Vault is present and `defaults.reward.enabled: true`, all
+  zones automatically grant small economy rewards without per-zone configuration.
+- **Session reward stats per player per zone** - EzAfk now tracks how many
+  rewards and how much currency each player has received in each zone for the
+  current server session (resets on restart). Available via PlaceholderAPI:
+  - `%ezafk_zone_rewards_grants%` - total grants across all zones
+  - `%ezafk_zone_rewards_amount%` - total currency earned across all zones
+  - `%ezafk_zone_reward_<zone>_grants%` - grants in a specific zone
+  - `%ezafk_zone_reward_<zone>_amount%` - currency earned in a specific zone
+- New notification config fields on zone rewards:
+  `reward.notification.enabled`, `reward.notification.displays`,
+  `reward.notification.message`, `reward.notification.duration`.
+
+### Fixed
+
+- Duplicate `reward:` YAML key under `afkzone:` in `messages.yml` — the second
+  block (`failed:`) was silently overwriting the first (`granted.*`), making all
+  reward granted messages fall back to their hardcoded defaults.
+
+
   [EzCountdown](https://github.com/ez-plugins/EzCountdown) plugin. Detected
   automatically when present (`integration.ezcountdown: auto`).
 - **Configurable kick-warning display types** — `kick.warnings.displays` accepts
@@ -25,7 +76,7 @@ Release tags use the `v` prefix (e.g. `v3.0.0`).
 ### Changed
 
 - `CompatibilityUtil` now handles `sendActionBar`, `showBossBarWarning`, and
-  `removeWarningBossBar` via reflection — safe on servers without the BossBar
+  `removeWarningBossBar` via reflection - safe on servers without the BossBar
   API (pre-1.9) or without the action-bar method available.
 - **Java 21+ is now required.** `maven.compiler.release` raised from `11` to
   `21`; the plugin JAR targets Java 21 bytecode (class file version 65).
@@ -38,50 +89,6 @@ Release tags use the `v` prefix (e.g. `v3.0.0`).
 
 - Paper 1.20.4 / Java 17 legacy CI smoke test (not needed after dropping Java 17
   support).
-
----
-
-## [3.0.1] - 2026-05-22
-
-[Modrinth](https://modrinth.com/plugin/ezafk/version/3.0.1)
-
-### Added
-
-- Paper 1.20.4 + Java 17 legacy smoke test in CI to verify genuine Java 17 runtime
-  compatibility on older server versions.
-- Server version compatibility table in `getting-started.md` listing per-feature MC
-  version minimums (cherry-leaf animation 1.20+, bubble-column 1.13+, kick cause
-  1.19.2+, hide-screen 1.13+).
-
-### Changed
-
-- `afk.sound.enabled` and `unafk.sound.enabled` now default to `false`; Simple Voice
-  Chat must be installed and `integration.voicechat` must be enabled for sound to work.
-- Documented minimum server requirement as MC 1.19 / Java 17 (was incorrectly shown as
-  1.26 / Java 25 in `getting-started.md`).
-- Added MC version compatibility notes to `configuration.md` and feature docs.
-- [Simple Voice Chat](https://modrinth.com/plugin/simple-voice-chat) API compile
-  dependency lowered from 2.6.0 → 2.2.5 so the plugin is compatible with any SVC
-  release from 2.2.5 through the latest 2.6.x (MC 1.19–latest). The SVC API is
-  additive between 2.x minor versions, so no SVC version in that range will throw
-  `NoSuchMethodError`.
-- CI Spigot 1.21.4 smoke test now builds the plugin JAR with JDK 25 and runs
-  BuildTools + the server with JDK 21. Spigot 1.21.4's BuildTools rejects Java 25
-  (`javaVersions: [65, 68]`); `maven.compiler.release=17` still guarantees Java 17
-  output bytecode regardless of the build JDK.
-- CI Paper and Folia smoke tests always build and run with JDK 25 (paper-api 26.x
-  uses Java 25 class file format; `maven.compiler.release=17` still guarantees Java
-  17 output bytecode).
-
-### Fixed
-
-- `mvn package` no longer fails when MockBukkit is absent from the local Maven cache.
-  MockBukkit is now declared in a `with-mockbukkit` Maven profile that auto-activates
-  only when `-Dmockbukkit.version=…` is passed (i.e. in CI); plain `mvn package` is
-  unaffected.
-- Suppressed `AsyncPlayerChatEvent` deprecation warning in `PlayerActivityListener`
-  (`@SuppressWarnings("deprecation")`); the event still fires correctly on all supported
-  server versions (1.19–1.21.x).
 
 ---
 

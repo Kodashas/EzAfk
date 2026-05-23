@@ -23,6 +23,7 @@ import com.gyvex.ezafk.state.AfkState;
 import com.gyvex.ezafk.manager.EconomyManager;
 import com.gyvex.ezafk.listener.EconomyServiceListener;
 import com.gyvex.ezafk.manager.AfkTimeManager;
+import com.gyvex.ezafk.manager.BypassListManager;
 import com.gyvex.ezafk.task.TaskManager;
 import com.github.ezframework.jaloquent.config.JaloquentConfig;
 import org.bukkit.Bukkit;
@@ -95,6 +96,7 @@ public class Bootstrap {
         plugin.getLogger().fine("Storage type selected: " + storageType);
         // Storage repository is initialized during Registry.init(); on reload the command will refresh it.
         AfkTimeManager.load(plugin);
+        BypassListManager.load(plugin);
 
         if (plugin.getConfig().getBoolean("economy.enabled", false)) {
             economyServiceListener = new EconomyServiceListener();

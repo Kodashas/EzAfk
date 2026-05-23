@@ -51,6 +51,7 @@ After first startup, EzAfk creates the following inside `plugins/EzAfk/`:
 | `config.yml` | Main settings: AFK timeout, kick, GUI, zones, anti-bypass |
 | `gui.yml` | In-game GUI layout and item definitions |
 | `mysql.yml` | MySQL/SQLite database connection settings |
+| `bypass-lists.yml` | Persistent bypass whitelist and blacklist |
 | `messages/` | One YAML file per language (en, es, nl, ru, zh, de) |
 
 ---

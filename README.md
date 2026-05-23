@@ -13,6 +13,8 @@ EzAfk is a powerful and flexible AFK (Away From Keyboard) management plugin for 
 - Automatic AFK detection and management
 - AFK kick warnings and configurable actions
 - GUI for AFK player overview and actions
+- AFK zones with economy rewards, countdown notifications (EzCountdown), and entry/exit messages
+- Persistent bypass whitelist and blacklist (`bypass-lists.yml`)
 - Integration with Economy, Tab, PlaceholderAPI, WorldGuard, and more
 - Multi-language support (EN, ES, NL, RU, ZH)
 - MySQL support for persistent data
@@ -49,7 +51,9 @@ Refer to these documents for setup, customization, and advanced usage.
 - `/afk reload` — Reload configuration
 - `/afk gui` — Open AFK player overview GUI
 - `/afk toggle <player>` — Toggle AFK for another player
-- `/afk bypass <player>` — Toggle AFK bypass for a player
+- `/afk bypass whitelist <add|remove|list> [player]` — Add/remove/list players on the persistent bypass whitelist
+- `/afk bypass blacklist <add|remove|list> [player]` — Add/remove/list players on the persistent bypass blacklist
+- `/afk bypass <player>` — Toggle per-session AFK bypass for a player
 - `/afk info <player>` — Show AFK info for a player
 - `/afk time [player]` — Show total AFK time
 - `/afk time reset <player>` — Reset a player's total AFK time (admin)

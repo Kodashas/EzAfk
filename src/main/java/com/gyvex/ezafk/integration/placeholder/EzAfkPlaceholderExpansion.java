@@ -2,6 +2,7 @@ package com.gyvex.ezafk.integration.placeholder;
 
 import com.gyvex.ezafk.EzAfk;
 import com.gyvex.ezafk.bootstrap.Registry;
+import com.gyvex.ezafk.manager.ZoneRewardStatsManager;
 import com.gyvex.ezafk.state.AfkState;
 import com.gyvex.ezafk.state.LastActiveState;
 import com.gyvex.ezafk.util.DurationFormatter;
@@ -11,6 +12,7 @@ import org.bukkit.Bukkit;
 import org.bukkit.OfflinePlayer;
 import org.bukkit.plugin.Plugin;
 
+import java.text.DecimalFormat;
 import java.util.Locale;
 import java.util.OptionalLong;
 import java.util.UUID;
@@ -20,6 +22,7 @@ import java.util.regex.Pattern;
 public class EzAfkPlaceholderExpansion extends PlaceholderExpansion {
 
     private static final Pattern INTEGER_PATTERN = Pattern.compile("(-?\\d+)");
+    private static final DecimalFormat AMOUNT_FORMAT = new DecimalFormat("0.##");
 
     private final boolean playtimeIntegrationEnabled;
     private final String playtimePlaceholder;
@@ -90,8 +93,31 @@ public class EzAfkPlaceholderExpansion extends PlaceholderExpansion {
             case "playtime_active_seconds": return formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), false);
             case "playtime_active": return formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), true);
             case "playtime_active_formatted": return formatOptionalSeconds(getActivePlaytimeSeconds(offlinePlayer, playerId), true);
-            default: return "";
+            case "zone_rewards_grants": return String.valueOf(ZoneRewardStatsManager.getTotalGrantsAllZones(playerId));
+            case "zone_rewards_amount": return AMOUNT_FORMAT.format(ZoneRewardStatsManager.getTotalAmountAllZones(playerId));
+            default: return handleZoneStatPlaceholder(playerId, params);
         }
+    }
+
+    /**
+     * Handles per-zone stat placeholders of the form:
+     * <ul>
+     *   <li>{@code zone_reward_<zonename>_grants} – total grants in that zone</li>
+     *   <li>{@code zone_reward_<zonename>_amount} – total amount earned in that zone</li>
+     * </ul>
+     */
+    private String handleZoneStatPlaceholder(UUID playerId, String params) {
+        if (!params.startsWith("zone_reward_")) return "";
+        String rest = params.substring("zone_reward_".length());
+        if (rest.endsWith("_grants")) {
+            String zoneName = rest.substring(0, rest.length() - "_grants".length());
+            return String.valueOf(ZoneRewardStatsManager.getStat(playerId, zoneName).totalGrants);
+        }
+        if (rest.endsWith("_amount")) {
+            String zoneName = rest.substring(0, rest.length() - "_amount".length());
+            return AMOUNT_FORMAT.format(ZoneRewardStatsManager.getStat(playerId, zoneName).totalAmount);
+        }
+        return "";
     }
 
     private String getConfigValue(String path) {

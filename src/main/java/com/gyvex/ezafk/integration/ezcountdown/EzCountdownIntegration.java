@@ -80,6 +80,13 @@ public class EzCountdownIntegration extends Integration {
     private final Map<UUID, String> activeWarnings = new HashMap<>();
 
     /**
+     * Maps player UUID → (zone-name → active zone-reward countdown name).
+     * Kept separately from kick-warning countdowns so they can be managed
+     * independently.
+     */
+    private final Map<UUID, Map<String, String>> activeZoneCountdowns = new HashMap<>();
+
+    /**
      * Returns the raw {@link EzCountdownApi} instance, or {@code null} if
      * EzCountdown is not available or the integration has not been loaded.
      */
@@ -111,6 +118,9 @@ public class EzCountdownIntegration extends Integration {
     public void unload() {
         for (UUID uuid : new ArrayList<>(activeWarnings.keySet())) {
             removeKickWarning(uuid);
+        }
+        for (UUID uuid : new ArrayList<>(activeZoneCountdowns.keySet())) {
+            removeAllZoneCountdowns(uuid);
         }
         api = null;
         isSetup = false;
@@ -198,5 +208,93 @@ public class EzCountdownIntegration extends Integration {
         }
         result.remove(DisplayType.CHAT);
         return result;
+    }
+
+    // -------------------------------------------------------------------------
+    // Per-player AFK-zone reward countdown API
+    // -------------------------------------------------------------------------
+
+    /**
+     * Starts (or restarts) a per-player countdown that shows the player how
+     * long until their next AFK-zone reward in {@code zoneName}.
+     *
+     * <p>Calling this method while a countdown is already active for the same
+     * player+zone will stop the old countdown first.
+     *
+     * <p>The {@code message} may use EzCountdown's live placeholders such as
+     * {@code {seconds}} and {@code {formatted}}, as well as EzAfk's own
+     * {@code %zone%} and {@code %amount%} which are substituted before the
+     * notification is sent.
+     *
+     * @param player   The player to show the countdown to.
+     * @param zoneName Zone identifier (used as the map key for tracking).
+     * @param message  Display message template.
+     * @param seconds  Countdown duration in seconds.
+     * @param displays EzCountdown display types (TITLE, ACTION_BAR, BOSS_BAR, etc.).
+     * @param zonePlaceholder Value to substitute for {@code %zone%} in the message.
+     * @param amountPlaceholder Value to substitute for {@code %amount%} in the message.
+     * @return {@code true} if the notification was sent successfully.
+     */
+    public boolean sendZoneRewardCountdown(Player player, String zoneName, String message,
+                                           int seconds, List<String> displays,
+                                           String zonePlaceholder, String amountPlaceholder) {
+        if (!isSetup || api == null || player == null || seconds <= 0 || displays.isEmpty()) return false;
+
+        UUID uuid = player.getUniqueId();
+        removeZoneRewardCountdown(uuid, zoneName); // stop any prior countdown first
+
+        EnumSet<DisplayType> displayTypes = mapDisplayTypes(displays);
+        if (displayTypes.isEmpty()) return false;
+
+        String formatMsg = message
+                .replace("%zone%", zonePlaceholder != null ? zonePlaceholder : "")
+                .replace("%amount%", amountPlaceholder != null ? amountPlaceholder : "");
+
+        Notification notification = Notification.builder()
+                .duration(seconds)
+                .displays(displayTypes)
+                .message(formatMsg)
+                .players(List.of(player))
+                .build();
+
+        Optional<String> result = api.sendNotification(notification);
+        if (result.isPresent()) {
+            activeZoneCountdowns.computeIfAbsent(uuid, k -> new HashMap<>()).put(zoneName, result.get());
+            return true;
+        }
+        return false;
+    }
+
+    /**
+     * Stops the active zone-reward countdown for the given player and zone,
+     * if any. Safe to call when no countdown is active.
+     *
+     * @param playerId UUID of the player.
+     * @param zoneName Name of the zone whose countdown should be removed.
+     */
+    public void removeZoneRewardCountdown(UUID playerId, String zoneName) {
+        Map<String, String> playerMap = activeZoneCountdowns.get(playerId);
+        if (playerMap == null) return;
+        String countdownName = playerMap.remove(zoneName);
+        if (countdownName != null && api != null) {
+            api.stopCountdown(countdownName);
+        }
+        if (playerMap.isEmpty()) {
+            activeZoneCountdowns.remove(playerId);
+        }
+    }
+
+    /**
+     * Stops all active zone-reward countdowns for the given player (e.g. when
+     * the player quits or leaves all zones).
+     *
+     * @param playerId UUID of the player.
+     */
+    public void removeAllZoneCountdowns(UUID playerId) {
+        Map<String, String> playerMap = activeZoneCountdowns.remove(playerId);
+        if (playerMap == null || api == null) return;
+        for (String countdownName : playerMap.values()) {
+            api.stopCountdown(countdownName);
+        }
     }
 }
