@@ -53,7 +53,7 @@ public final class BypassListManager {
     }
 
     /** Package-private: clear all in-memory state and reset the data-file pointer (used in tests). */
-    static void reset() {
+    public static void reset() {
         WHITELIST.clear();
         BLACKLIST.clear();
         dataFile = null;
